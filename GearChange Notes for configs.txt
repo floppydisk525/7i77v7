@@ -1,0 +1,87 @@
+1. scale encoder
+2. scale rpms 
+3. if can redirect z pulse, then absolute value of counts and trigger pin that way.  
+
+
+
+
+*********************  From version 2.6 LinuxCNC Integrator Manual ***********************
+• motion.spindle-index-enable - (bit, I/O) For correct operation of spindle synchronized moves, this pin must be hooked to the index-enable pin of the spindle encoder.
+• motion.spindle-revs - (float, in) For correct operation of spindle synchronized moves, this signal must be hooked to the position pin of the spindle encoder. The spindle encoder position should be scaled such that spindle-revs increases by 1.0 for each rotation of the spindle in the clockwise (M3) direction.
+• motion.spindle-speed-in - (float, in) Feedback of actual spindle speed in rotations per second. This is used by feed-per revolution motion (G95). If your spindle encoder driver does not have a velocity output, you can generate a suitable one by sending the spindle position through a ddt component. If you do not have a spindle encoder, you can loop back motion.spindlespeed-out-rps.
+
+
+
+Most commonly when spindle synchronized operations don't work its something wrong in the hal file
+usually something wrong with these motion pins:
+
+motion.spindle-revs
+
+motion.spindle-index-enable
+
+motion.spindle-at-speed
+
+(man motion)
+
+
+Good linuxcnc forum: 
+https://forum.linuxcnc.org/forum/10-advanced-configuration/29579-new-quadrature-encoder-index-questions
+
+THIS IS THE MONEY LINK
+https://forum.linuxcnc.org/forum/49-basic-configuration/26938-rigid-tapping-g33-1-isnt-working-spindle-isnt-sync?limitstart=0#38243
+------------------------------------------- files/code to change ---------------------------------------
+To invert the spindle encoder scale (in my main .ini file):
+#********************
+# Spindle
+#********************
+[SPINDLE_9]
+ENCODER_SCALE = -1024
+
+
+In my main .hal file:
+
+setp hm2_5i25.0.encoder.03.counter-mode 0
+setp hm2_5i25.0.encoder.03.filter 1
+setp hm2_5i25.0.encoder.03.index-invert 0
+setp hm2_5i25.0.encoder.03.index-mask 0
+setp hm2_5i25.0.encoder.03.index-mask-invert 0
+setp hm2_5i25.0.encoder.03.scale [SPINDLE_9]ENCODER_SCALE
+
+net spindle-revs hm2_5i25.0.encoder.03.position motion.spindle-revs
+#net spindle-revs               =>  motion.spindle-revs
+#net spindle-vel-fb             =>  motion.spindle-speed-in
+net spindle-vel-fb-rps hm2_5i25.0.encoder.03.velocity motion.spindle-speed-in
+#net spindle-index-enable      <=>  motion.spindle-index-enable
+net spindle-index-enable hm2_5i25.0.encoder.03.index-enable motion.spindle-index-enable
+
+#Convert the spindle velocity (in RPS) signal to RPM and filter it so it isn't so variable. This is
+#only to feed the spindle RPM display in my Glade side panel
+setp scale.0.gain 60
+setp lowpass.0.gain 0.01
+net spindle-vel-fb-rps => scale.0.in
+net spindle-fb-rpm scale.0.out => abs.0.in
+net spindle-fb-rpm-abs abs.0.out => lowpass.0.in
+net spindle-fb-rpm-abs-filtered lowpass.0.out
+
+
+#MJ:  already have this, wire up encoder...
+In custom.hal:
+
+# connect the GS2 at speed to the motion at speed
+net gs2-at-speed motion.spindle-at-speed <= spindle-vfd.at-speed
+
+#MJ: Already have this setup....
+# connect the spindle RPM to the GS2
+# scale pulley ratio on spindle
+setp scale.1.gain 1.154
+net commanded-speed scale.1.in motion.spindle-speed-out
+net gs2-RPM spindle-vfd.speed-command scale.1.out
+
+
+#MJ: don't implement right away...
+In custom_postgui.hal:
+
+# RPM Meter in Glade panel is fed by filtered encoder velocity signal
+setp gladevcp.hal_table4 1
+net spindle-fb-rpm-abs-filtered gladevcp.hal_meter1
+

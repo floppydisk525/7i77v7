@@ -4,11 +4,11 @@
 
 loadrt trivkins
 loadrt [EMCMOT]EMCMOT servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[TRAJ]AXES
-#loadrt probe_parport                       #Removed 20151003 for upgrade to LinuxCNC 2.7
+loadrt probe_parport
 loadrt hostmot2
-loadrt hm2_pci config=" num_encoders=3 num_pwmgens=0 num_3pwmgens=0 num_stepgens=0 sserial_port_0=000xx " 
+loadrt hm2_pci config=" num_encoders=4 num_pwmgens=0 num_3pwmgens=0 num_stepgens=0 sserial_port_0=000xx " 
 setp     hm2_5i25.0.watchdog.timeout_ns 5000000
-loadrt pid names=pid.x,pid.y,pid.z
+loadrt pid names=pid.x,pid.y,pid.z,pid.s
 
 addf hm2_5i25.0.read servo-thread
 addf motion-command-handler servo-thread
@@ -16,8 +16,9 @@ addf motion-controller servo-thread
 addf pid.x.do-pid-calcs                 servo-thread
 addf pid.y.do-pid-calcs                 servo-thread
 addf pid.z.do-pid-calcs                 servo-thread
+addf pid.s.do-pid-calcs                 servo-thread
 addf hm2_5i25.0.write         servo-thread
-#addf hm2_5i25.0.pet_watchdog  servo-thread   #Removed 20151003 for upgrade to LinuxCNC 2.7
+addf hm2_5i25.0.pet_watchdog  servo-thread
 
 # external output signals
 
@@ -196,8 +197,16 @@ net both-z     =>  axis.2.neg-lim-sw-in
 net both-z     =>  axis.2.pos-lim-sw-in
 
 #*******************
-#  SPINDLE S
+#  SPINDLE S loadrt
 #*******************
+
+#sets spindle-at-speed true
+setp hm2_5i25.0.encoder.03.counter-mode 0
+setp hm2_5i25.0.encoder.03.filter 1
+setp hm2_5i25.0.encoder.03.index-invert 0
+setp hm2_5i25.0.encoder.03.index-mask 0
+setp hm2_5i25.0.encoder.03.index-mask-invert 0
+setp hm2_5i25.0.encoder.03.scale -1024
 
 # ---setup spindle control signals---
 
@@ -214,7 +223,7 @@ net spindle-revs               =>  motion.spindle-revs
 net spindle-vel-fb             =>  motion.spindle-speed-in
 net spindle-index-enable      <=>  motion.spindle-index-enable
 
-# ---Setup spindle at speed signals---
+# ---Setup spindle at speed signals--- loadrt
 
 #sets spindle-at-speed true
 
@@ -277,4 +286,3 @@ net tool-change-request     iocontrol.0.tool-change       =>  hal_manualtoolchan
 net tool-change-confirmed   iocontrol.0.tool-changed      <=  hal_manualtoolchange.changed
 net tool-number             iocontrol.0.tool-prep-number  =>  hal_manualtoolchange.number
 net tool-prepare-loopback   iocontrol.0.tool-prepare      =>  iocontrol.0.tool-prepared
-

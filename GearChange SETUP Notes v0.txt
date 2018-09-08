@@ -1,0 +1,623 @@
+#**********************
+#Load Real Time Treads
+#**********************
+loadrt trivkins
+loadrt [EMCMOT]EMCMOT servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[TRAJ]AXES
+loadrt hostmot2
+loadrt hm2_pci config="firmware=hm2/5i20/SV12_2X7I48_72.BIT num_encoders=6 num_pwmgens=5 num_3pwmgens=0 num_stepgens=0" 
+loadrt pid num_chan=5
+#loadrt classicladder_rt
+loadrt toggle2nist count=3
+loadrt and2 count=3
+loadrt multiswitch count=8
+loadrt or2 count=7
+loadrt lowpass count=4
+loadrt scale count=6
+loadrt abs count=4
+loadrt mux2 count=3
+loadrt mux4 count=5
+loadrt flipflop count=2
+loadrt near count=1
+loadrt toggle count=4
+loadrt not count=4
+loadrt gearchange count=1
+
+#**************
+#Motion
+#**************
+
+addf hm2_5i20.0.read servo-thread
+addf motion-command-handler servo-thread
+addf motion-controller servo-thread
+addf pid.0.do-pid-calcs servo-thread
+addf pid.1.do-pid-calcs servo-thread
+addf pid.2.do-pid-calcs servo-thread
+addf pid.3.do-pid-calcs servo-thread
+addf pid.4.do-pid-calcs servo-thread
+
+setp hm2_5i20.0.pwmgen.pwm_frequency 190000
+setp hm2_5i20.0.pwmgen.pdm_frequency 100000
+setp hm2_5i20.0.watchdog.timeout_ns 10000000
+
+alias pin    pid.0.Pgain         pid.x.Pgain
+alias pin    pid.0.Igain         pid.x.Igain
+alias pin    pid.0.Dgain         pid.x.Dgain
+alias pin    pid.0.bias          pid.x.bias
+alias pin    pid.0.FF0           pid.x.FF0
+alias pin    pid.0.FF1           pid.x.FF1
+alias pin    pid.0.FF2           pid.x.FF2
+alias pin    pid.0.deadband      pid.x.deadband
+alias pin    pid.0.maxoutput     pid.x.maxoutput
+alias pin    pid.0.enable        pid.x.enable
+alias pin    pid.0.command       pid.x.command
+alias pin    pid.0.feedback      pid.x.feedback
+alias pin    pid.0.output        pid.x.output
+alias pin    pid.0.index-enable  pid.x.index-enable
+
+alias pin    pid.1.Pgain         pid.y.Pgain
+alias pin    pid.1.Igain         pid.y.Igain
+alias pin    pid.1.Dgain         pid.y.Dgain
+alias pin    pid.1.bias          pid.y.bias
+alias pin    pid.1.FF0           pid.y.FF0
+alias pin    pid.1.FF1           pid.y.FF1
+alias pin    pid.1.FF2           pid.y.FF2
+alias pin    pid.1.deadband      pid.y.deadband
+alias pin    pid.1.maxoutput     pid.y.maxoutput
+alias pin    pid.1.enable        pid.y.enable
+alias pin    pid.1.command       pid.y.command
+alias pin    pid.1.feedback      pid.y.feedback
+alias pin    pid.1.output        pid.y.output
+alias pin    pid.1.index-enable  pid.y.index-enable
+
+alias pin    pid.2.Pgain         pid.z.Pgain
+alias pin    pid.2.Igain         pid.z.Igain
+alias pin    pid.2.Dgain         pid.z.Dgain
+alias pin    pid.2.bias          pid.z.bias
+alias pin    pid.2.FF0           pid.z.FF0
+alias pin    pid.2.FF1           pid.z.FF1
+alias pin    pid.2.FF2           pid.z.FF2
+alias pin    pid.2.deadband      pid.z.deadband
+alias pin    pid.2.maxoutput     pid.z.maxoutput
+alias pin    pid.2.enable        pid.z.enable
+alias pin    pid.2.command       pid.z.command
+alias pin    pid.2.feedback      pid.z.feedback
+alias pin    pid.2.output        pid.z.output
+alias pin    pid.2.index-enable  pid.z.index-enable
+
+alias pin    pid.3.Pgain         pid.a.Pgain
+alias pin    pid.3.Igain         pid.a.Igain
+alias pin    pid.3.Dgain         pid.a.Dgain
+alias pin    pid.3.bias          pid.a.bias
+alias pin    pid.3.FF0           pid.a.FF0
+alias pin    pid.3.FF1           pid.a.FF1
+alias pin    pid.3.FF2           pid.a.FF2
+alias pin    pid.3.deadband      pid.a.deadband
+alias pin    pid.3.maxoutput     pid.a.maxoutput
+alias pin    pid.3.enable        pid.a.enable
+alias pin    pid.3.command       pid.a.command
+alias pin    pid.3.feedback      pid.a.feedback
+alias pin    pid.3.output        pid.a.output
+alias pin    pid.3.index-enable  pid.a.index-enable
+
+alias pin    pid.4.Pgain         pid.s.Pgain
+alias pin    pid.4.Igain         pid.s.Igain
+alias pin    pid.4.Dgain         pid.s.Dgain
+alias pin    pid.4.bias          pid.s.bias
+alias pin    pid.4.FF0           pid.s.FF0
+alias pin    pid.4.FF1           pid.s.FF1
+alias pin    pid.4.FF2           pid.s.FF2
+alias pin    pid.4.deadband      pid.s.deadband
+alias pin    pid.4.maxoutput     pid.s.maxoutput
+alias pin    pid.4.enable        pid.s.enable
+alias pin    pid.4.command       pid.s.command
+alias pin    pid.4.feedback      pid.s.feedback
+alias pin    pid.4.output        pid.s.output
+alias pin    pid.4.index-enable  pid.s.index-enable
+
+addf hm2_5i20.0.write         servo-thread
+addf hm2_5i20.0.pet_watchdog  servo-thread
+
+#**************
+#Classic Ladder
+#**************
+
+#addf classicladder.0.refresh servo-thread
+#loadusr classicladder
+#loadusr classicladder myladder.clp
+
+#*******************
+#Pendent
+#*******************
+
+addf multiswitch.0 servo-thread		#Step
+addf multiswitch.1 servo-thread		#Axis selector 
+addf multiswitch.2 servo-thread		#Play/Pause
+addf multiswitch.3 servo-thread		#jog-step or jog-velocity
+addf multiswitch.4 servo-thread		#flood control
+addf multiswitch.5 servo-thread		#Spindle On Off
+addf multiswitch.6 servo-thread		#Manual Auto MDI modes
+addf multiswitch.7 servo-thread
+setp multiswitch.0.positions 3
+setp multiswitch.1.positions 2
+setp multiswitch.2.positions 1
+setp multiswitch.3.positions 2
+setp multiswitch.4.positions 1 
+setp multiswitch.5.positions 2
+setp multiswitch.6.positions 2
+setp multiswitch.7.positions 1
+addf or2.0 servo-thread				#step
+addf or2.1 servo-thread				#step
+addf or2.2 servo-thread				#spindle gear change
+addf or2.3 servo-thread				
+addf or2.4 servo-thread
+#addf or2.5 servo-thread
+addf mux2.0 servo-thread
+addf mux4.0 servo-thread
+addf mux4.1 servo-thread
+addf mux4.2 servo-thread
+addf mux4.3 servo-thread
+addf mux4.4 servo-thread
+addf not.0 servo-thread
+addf not.1 servo-thread
+addf not.2 servo-thread
+
+setp hm2_5i20.0.encoder.05.counter-mode 1
+setp hm2_5i20.0.encoder.05.filter 1
+setp hm2_5i20.0.encoder.05.index-invert 0
+setp hm2_5i20.0.encoder.05.index-mask 0
+setp hm2_5i20.0.encoder.05.index-mask-invert 0
+setp hm2_5i20.0.encoder.05.scale 400
+
+# Step
+setp axis.0.jog-vel-mode 1
+setp axis.1.jog-vel-mode 1
+setp axis.2.jog-vel-mode 1
+#setp axis.3.jog-vel-mode 1
+setp mux4.0.in0	0.0001
+setp mux4.0.in1	0.001
+setp mux4.0.in2	0.01
+setp mux4.0.in3	0.1
+net step1								<= multiswitch.0.state0
+net step2 or2.0.in0						<= multiswitch.0.state1
+net step3 or2.1.in0						<= multiswitch.0.state2
+net step4 or2.0.in1 or2.1.in1			<= multiswitch.0.state3
+net toggle-step multiswitch.0.toggle	<= hm2_5i20.0.gpio.061.in	#Step
+net pend-step axis.0.jog-scale 	<= mux4.0.out
+net pend-step axis.1.jog-scale
+net pend-step axis.2.jog-scale
+#net pend-step axis.3.jog-scale
+net jog-speed-1 mux4.0.sel0		<= or2.0.out
+net jog-speed-2 mux4.0.sel1		<= or2.1.out
+#net jog-speed-final halui.jog-speed	<= mux4.0.out
+#net pend-step halui.feed-override.scale 
+#net pend-step halui.spindle-override.scale
+net pend-counts axis.0.jog-counts 	<= hm2_5i20.0.encoder.05.count
+net pend-counts axis.1.jog-counts
+net pend-counts axis.2.jog-counts
+#net pend-counts axis.3.jog-counts
+
+
+# Axis selector 
+
+net mpg-x axis.0.jog-enable halui.joint.0.select		<= multiswitch.1.state0
+net mpg-y axis.1.jog-enable halui.joint.1.select		<= multiswitch.1.state1
+net mpg-z axis.2.jog-enable halui.joint.2.select		<= multiswitch.1.state2
+#net mpg-a axis.3.jog-enable halui.joint.3.select		<= multiswitch.1.state3
+net toggle-axis multiswitch.1.toggle					<= hm2_5i20.0.gpio.057.in	#Axis selector 
+
+# Play/Pause
+
+net pause halui.program.pause							<= multiswitch.2.state0
+net resume halui.program.resume							<= multiswitch.2.state1
+net play-pause multiswitch.2.toggle 					<= hm2_5i20.0.gpio.056.in_not	#Play/Pause
+
+
+# Jog Step or Velocity
+
+#setp mux2.0.in0 0
+#setp mux2.0.in1 1
+#net jog-absolute mux2.0.sel0							<= multiswitch.3.state0
+#net jog-velocity mux2.0.sel							<= multiswitch.3.state1
+#net jog-mode mux2.0.out
+#axis.0.jog-vel-mode		
+#setp axis.1.jog-vel-mode abs.0.out
+#setp axis.2.jog-vel-mode abs.0.out
+#setp axis.3.jog-vel-mode abs.0.out
+#net toggle-vel-mode multiswitch.3.toggle				<= hm2_5i20.0.gpio.054.in	#jog-step or jog-velocity
+
+# Flood on or Mist on
+
+net mist-on		not.1.in		<= hm2_5i20.0.gpio.062.in_not
+net mist-off		not.1.out		=> halui.mist.off
+
+net flood-on 	not.2.in				<= hm2_5i20.0.gpio.058.in_not
+net flood-off 	not.2.out				=> halui.flood.off
+
+# Home All
+
+net home halui.joint.selected.home		<= hm2_5i20.0.gpio.055.in_not	#Home Selected Joint
+
+# Spindle On or Off
+
+net spindle-on halui.spindle.start		<= multiswitch.5.state1
+net spindle-off halui.spindle.stop		<= multiswitch.5.state0
+net spindle-control multiswitch.5.toggle	<= hm2_5i20.0.gpio.060.in_not	#Spindle On Off
+
+# Spindle Forward
+
+#net spindle-forward halui.spindle.forward 	<= hm2_5i20.0.gpio.062.in_not	#Spindle Forward
+
+# Spindle Reverse
+
+#net spindle-reverse halui.spindle.reverse 	<= hm2_5i20.0.gpio.058.in_not	#Spindle Reverse
+
+# Program Mode
+
+net manual halui.mode.manual			<= multiswitch.6.state0
+net mdi halui.mode.mdi					<= multiswitch.6.state1
+net mode-toggle multiswitch.6.toggle	<= hm2_5i20.0.gpio.059.in	#Manual Auto MDI modes
+
+#*******************
+#  AXIS X
+#*******************
+
+setp   pid.x.Pgain     [AXIS_0]P
+setp   pid.x.Igain     [AXIS_0]I
+setp   pid.x.Dgain     [AXIS_0]D
+setp   pid.x.bias      [AXIS_0]BIAS
+setp   pid.x.FF0       [AXIS_0]FF0
+setp   pid.x.FF1       [AXIS_0]FF1
+setp   pid.x.FF2       [AXIS_0]FF2
+setp   pid.x.deadband  [AXIS_0]DEADBAND
+setp   pid.x.maxoutput [AXIS_0]MAX_OUTPUT
+
+net x-index-enable  <=>  pid.x.index-enable
+
+# ---PWM Generator signals/setup---
+
+setp   hm2_5i20.0.pwmgen.00.output-type 2
+setp   hm2_5i20.0.pwmgen.00.scale  [AXIS_0]OUTPUT_SCALE
+
+net xenable     			=> pid.x.enable
+net xoutput     pid.x.output           	=> hm2_5i20.0.pwmgen.00.value
+net xpos-cmd    axis.0.motor-pos-cmd   	=> pid.x.command
+net xenable     axis.0.amp-enable-out  	=> hm2_5i20.0.pwmgen.00.enable hm2_5i20.0.gpio.047.out
+
+# ---Encoder feedback signals/setup---
+
+setp    hm2_5i20.0.encoder.00.counter-mode 0
+setp    hm2_5i20.0.encoder.00.filter 1
+setp    hm2_5i20.0.encoder.00.index-invert 0
+setp    hm2_5i20.0.encoder.00.index-mask 0
+setp    hm2_5i20.0.encoder.00.index-mask-invert 0
+setp    hm2_5i20.0.encoder.00.scale  [AXIS_0]ENCODER_SCALE
+
+net xpos-fb               			<=  	hm2_5i20.0.encoder.00.position
+net xpos-fb               			=>  	pid.x.feedback
+net xpos-fb              			=>  	axis.0.motor-pos-fb
+net x-index-enable axis.0.index-enable  	<=>  	hm2_5i20.0.encoder.00.index-enable
+
+
+# ---setup home / limit switch signals---
+
+net x-home-sw       =>  axis.0.home-sw-in hm2_5i20.0.gpio.032.in
+net x-neg-limit     =>  axis.0.neg-lim-sw-in hm2_5i20.0.gpio.030.in
+net x-pos-limit     =>  axis.0.pos-lim-sw-in hm2_5i20.0.gpio.031.in
+
+#*******************
+#  AXIS Y
+#*******************
+
+setp   pid.y.Pgain     [AXIS_1]P
+setp   pid.y.Igain     [AXIS_1]I
+setp   pid.y.Dgain     [AXIS_1]D
+setp   pid.y.bias      [AXIS_1]BIAS
+setp   pid.y.FF0       [AXIS_1]FF0
+setp   pid.y.FF1       [AXIS_1]FF1
+setp   pid.y.FF2       [AXIS_1]FF2
+setp   pid.y.deadband  [AXIS_1]DEADBAND
+setp   pid.y.maxoutput [AXIS_1]MAX_OUTPUT
+
+net y-index-enable  <=>  pid.y.index-enable
+
+# ---PWM Generator signals/setup---
+
+setp   hm2_5i20.0.pwmgen.01.output-type 2
+setp   hm2_5i20.0.pwmgen.01.scale  [AXIS_1]OUTPUT_SCALE
+
+net yenable     => pid.y.enable
+net youtput     pid.y.output           => hm2_5i20.0.pwmgen.01.value
+net ypos-cmd    axis.1.motor-pos-cmd   => pid.y.command
+net yenable     axis.1.amp-enable-out  => hm2_5i20.0.pwmgen.01.enable
+
+# ---Encoder feedback signals/setup---
+
+setp    hm2_5i20.0.encoder.01.counter-mode 0
+setp    hm2_5i20.0.encoder.01.filter 1
+setp    hm2_5i20.0.encoder.01.index-invert 0
+setp    hm2_5i20.0.encoder.01.index-mask 0
+setp    hm2_5i20.0.encoder.01.index-mask-invert 0
+setp    hm2_5i20.0.encoder.01.scale  [AXIS_1]ENCODER_SCALE
+
+net ypos-fb               <=  hm2_5i20.0.encoder.01.position
+net ypos-fb               =>  pid.y.feedback
+net ypos-fb               =>  axis.1.motor-pos-fb
+net y-index-enable    axis.1.index-enable  <=>  hm2_5i20.0.encoder.01.index-enable
+
+# ---setup home / limit switch signals---
+
+net y-home-sw    	=>  axis.1.home-sw-in hm2_5i20.0.gpio.034.in
+net y-neg-limit		=>  axis.1.neg-lim-sw-in hm2_5i20.0.gpio.033.in
+net y-pos-limit     =>  axis.1.pos-lim-sw-in hm2_5i20.0.gpio.035.in
+
+#*******************
+#  AXIS Z
+#*******************
+
+setp   pid.z.Pgain     [AXIS_2]P
+setp   pid.z.Igain     [AXIS_2]I
+setp   pid.z.Dgain     [AXIS_2]D
+setp   pid.z.bias      [AXIS_2]BIAS
+setp   pid.z.FF0       [AXIS_2]FF0
+setp   pid.z.FF1       [AXIS_2]FF1
+setp   pid.z.FF2       [AXIS_2]FF2
+setp   pid.z.deadband  [AXIS_2]DEADBAND
+setp   pid.z.maxoutput [AXIS_2]MAX_OUTPUT
+
+net z-index-enable  <=>  pid.z.index-enable
+
+# ---PWM Generator signals/setup---
+
+setp   hm2_5i20.0.pwmgen.02.output-type 2
+setp   hm2_5i20.0.pwmgen.02.scale  [AXIS_2]OUTPUT_SCALE
+
+net zenable     => pid.z.enable
+net zoutput     pid.z.output           => hm2_5i20.0.pwmgen.02.value
+net zpos-cmd    axis.2.motor-pos-cmd   => pid.z.command
+net zenable     axis.2.amp-enable-out  => hm2_5i20.0.pwmgen.02.enable
+
+# ---Encoder feedback signals/setup---
+
+setp    hm2_5i20.0.encoder.02.counter-mode 0
+setp    hm2_5i20.0.encoder.02.filter 1
+setp    hm2_5i20.0.encoder.02.index-invert 0
+setp    hm2_5i20.0.encoder.02.index-mask 0
+setp    hm2_5i20.0.encoder.02.index-mask-invert 0
+setp    hm2_5i20.0.encoder.02.scale  [AXIS_2]ENCODER_SCALE
+
+net zpos-fb               <=  hm2_5i20.0.encoder.02.position
+net zpos-fb               =>  pid.z.feedback
+net zpos-fb               =>  axis.2.motor-pos-fb
+net z-index-enable    axis.2.index-enable  <=>  hm2_5i20.0.encoder.02.index-enable
+
+# ---setup home / limit switch signals---
+
+net z-home-sw hm2_5i20.0.gpio.046.out  =>  axis.2.home-sw-in hm2_5i20.0.gpio.027.in
+net z-neg-limit     =>  axis.2.neg-lim-sw-in hm2_5i20.0.gpio.028.in
+net z-pos-limit     =>  axis.2.pos-lim-sw-in hm2_5i20.0.gpio.029.in
+
+#*******************
+#  AXIS A
+#*******************
+
+#setp   pid.a.Pgain     [AXIS_3]P
+#setp   pid.a.Igain     [AXIS_3]I
+#setp   pid.a.Dgain     [AXIS_3]D
+#setp   pid.a.bias      [AXIS_3]BIAS
+#setp   pid.a.FF0       [AXIS_3]FF0
+#setp   pid.a.FF1       [AXIS_3]FF1
+#setp   pid.a.FF2       [AXIS_3]FF2
+#setp   pid.a.deadband  [AXIS_3]DEADBAND
+#setp   pid.a.maxoutput [AXIS_3]MAX_OUTPUT
+
+#net a-index-enable  <=>  pid.a.index-enable
+
+# ---PWM Generator signals/setup---
+
+#setp   hm2_5i20.0.pwmgen.03.output-type 2
+#setp   hm2_5i20.0.pwmgen.03.scale  [AXIS_3]OUTPUT_SCALE
+
+#net aenable     => pid.a.enable
+#net aoutput     pid.a.output           => hm2_5i20.0.pwmgen.03.value
+#net apos-cmd    axis.3.motor-pos-cmd   => pid.a.command
+#net aenable     axis.3.amp-enable-out  => hm2_5i20.0.pwmgen.03.enable
+
+# ---Encoder feedback signals/setup---
+
+#setp    hm2_5i20.0.encoder.03.counter-mode 0
+#setp    hm2_5i20.0.encoder.03.filter 1
+#setp    hm2_5i20.0.encoder.03.index-invert 0
+#setp    hm2_5i20.0.encoder.03.index-mask 0
+#setp    hm2_5i20.0.encoder.03.index-mask-invert 0
+#setp    hm2_5i20.0.encoder.03.scale  [AXIS_3]ENCODER_SCALE
+
+#net apos-fb               <=  hm2_5i20.0.encoder.03.position
+#net apos-fb               =>  pid.a.feedback
+#net apos-fb               =>  axis.3.motor-pos-fb
+#net a-index-enable    axis.3.index-enable  <=>  hm2_5i20.0.encoder.03.index-enable
+
+#****************
+# Spindle Control
+#****************
+
+setp   hm2_5i20.0.pwmgen.04.output-type 2
+
+net spindle-enable hm2_5i20.0.gpio.071.out 	<=  	motion.spindle-on hm2_5i20.0.gpio.045.out
+net spindle-enable				=> 	hm2_5i20.0.pwmgen.04.enable
+
+addf flipflop.0 servo-thread
+addf mux2.1 servo-thread
+setp mux2.1.in0 0.977
+setp mux2.1.in1 0.148925
+net gearchange-scale-change mux2.1.sel flipflop.0.out
+
+net spindle-encoder-gain scale.4.gain 
+net spindle-encoder-gain mux2.1.out
+
+addf flipflop.1 servo-thread
+addf mux2.2 servo-thread
+setp mux2.2.in0 1
+setp mux2.2.in1 6.558875
+net gearchange-scale-change mux2.2.sel flipflop.1.out
+
+# Set the spindle’s top speed in RPM
+
+setp hm2_5i20.0.pwmgen.04.scale 3540
+net spindle-gain scale.3.gain 
+net spindle-gain mux2.2.out
+
+# controls
+net spindle-cw			<=	motion.spindle-forward
+net spindle-ccw			<=  	motion.spindle-reverse
+
+#****************************
+# Spindle Synchronized Motion
+#****************************
+
+# add the encoder
+setp    hm2_5i20.0.encoder.04.counter-mode 0
+setp    hm2_5i20.0.encoder.04.filter 0
+setp    hm2_5i20.0.encoder.04.index-invert 0
+setp    hm2_5i20.0.encoder.04.index-mask 0
+setp    hm2_5i20.0.encoder.04.scale 8000
+
+#net spindle-index-enable	motion.spindle-index-enable		#<=>	hm2_5i20.0.encoder.04.index-enable
+net spindle-position hm2_5i20.0.encoder.04.position		=>	motion.spindle-revs
+net spindle-encoder-speed scale.4.out 						
+net spindle-velocity hm2_5i20.0.encoder.04.velocity		=> 	motion.spindle-speed-in scale.4.in
+net spindle-index-enable hm2_5i20.0.encoder.04.index-enable 	<=> motion.spindle-index-enable
+
+#setp motion.spindle-index-enable 1 #cancel this after testing encoder polarity
+
+#*****************
+# Spindle At Speed
+#*****************
+
+addf abs.1 servo-thread
+addf abs.2 servo-thread
+addf near.0 servo-thread
+addf scale.5 servo-thread
+net spindle-encoder-speed abs.1.in
+net scale6 scale.5.in abs.1.out
+setp scale.5.gain 1000
+net spindle-encoder-nearout scale.5.out abs.2.in
+net spindle-encoder-speed1 abs.2.out near.0.in1
+net spindle-rpm-filtered near.0.in2
+net spindle-at-speed motion.spindle-at-speed <= near.0.out
+setp near.0.scale 1.01
+
+#*********
+#RPM Scale
+#*********
+
+addf abs.3 servo-thread
+setp scale.0.gain 999.9666
+setp lowpass.0.gain .005
+addf lowpass.0 servo-thread
+addf scale.0 servo-thread
+
+#******************
+#Spindle Gearchange
+#******************
+
+net spindle-cw or2.2.in0
+net spindle-ccw or2.2.in1
+addf toggle.0 servo-thread
+addf gearchange.0 servo-thread
+addf scale.3 servo-thread
+addf scale.4 servo-thread
+setp toggle.0.debounce 0
+setp gearchange.0.min1 10
+setp gearchange.0.max1 600
+setp gearchange.0.min2 500
+setp gearchange.0.max2 3595
+setp gearchange.0.scale2 6.558875
+net spindle-speed-raw motion.spindle-speed-out gearchange.0.speed-in scale.3.in 
+net spindle-speed scale.3.out hm2_5i20.0.pwmgen.04.value 
+net spindle-encoder-speed 						=>	lowpass.0.in
+net spindle-fb-filtered-rps lowpass.0.out  				=> 	abs.3.in
+net spindle-fb-filtered-abs-rps abs.3.out      				=> 	scale.0.in 
+
+#******************************
+# connect miscellaneous signals
+#******************************
+
+#  ---digital in / out signals---
+
+#  ---estop signals---
+# create a signal for the estop loopback
+addf and2.2 servo-thread
+net power-on hm2_5i20.0.gpio.036.in => iocontrol.0.emc-enable-in
+net estop-trip hm2_5i20.0.gpio.052.in_not halui.estop.activate
+net estop-reset hm2_5i20.0.gpio.052.in halui.estop.reset
+# halui.machine.on
+
+#  ---manual tool change signals---
+
+loadusr -W hal_manualtoolchange
+net tool-change-request     iocontrol.0.tool-change       =>  hal_manualtoolchange.change
+net tool-change-confirmed   iocontrol.0.tool-changed      <=  hal_manualtoolchange.changed
+net tool-number             iocontrol.0.tool-prep-number  =>  hal_manualtoolchange.number
+net tool-prepare-loopback   iocontrol.0.tool-prepare      =>  iocontrol.0.tool-prepared
+
+#Middle 7i37 COM board is 12vdc 
+#Top 7i37 COM is 24vdc
+
+#Tool Out
+setp hm2_5i20.0.gpio.040.is_output true
+
+#Tool In
+setp hm2_5i20.0.gpio.041.is_output true
+
+#Turret Home
+setp hm2_5i20.0.gpio.042.is_output true
+
+#Turret CW
+setp hm2_5i20.0.gpio.043.is_output true
+
+#Turret CCW
+setp hm2_5i20.0.gpio.044.is_output true
+
+#Spindle Stopped
+setp hm2_5i20.0.gpio.045.is_output true
+setp hm2_5i20.0.gpio.045.invert_output true
+
+#Z is in home position
+setp hm2_5i20.0.gpio.046.is_output true
+#setp hm2_5i20.0.gpio.046.invert_output true
+
+#drive enable and estop loop powerup
+setp hm2_5i20.0.gpio.047.is_output true
+setp hm2_5i20.0.gpio.047.invert_output true
+
+#
+setp hm2_5i20.0.gpio.064.is_output true
+setp hm2_5i20.0.gpio.064.invert_output true
+
+#
+setp hm2_5i20.0.gpio.065.is_output true
+setp hm2_5i20.0.gpio.065.invert_output true
+
+#
+setp hm2_5i20.0.gpio.066.is_output true
+setp hm2_5i20.0.gpio.066.invert_output true
+
+#
+setp hm2_5i20.0.gpio.067.is_output true
+setp hm2_5i20.0.gpio.067.invert_output true
+
+#
+setp hm2_5i20.0.gpio.068.is_output true
+setp hm2_5i20.0.gpio.068.invert_output true
+
+#Flood Coolant
+setp hm2_5i20.0.gpio.069.is_output true
+setp hm2_5i20.0.gpio.069.invert_output true
+
+#Mist Coolant
+setp hm2_5i20.0.gpio.070.is_output true
+setp hm2_5i20.0.gpio.070.invert_output true
+
+#Spindle Enable
+setp hm2_5i20.0.gpio.071.is_output true
+setp hm2_5i20.0.gpio.071.invert_output true

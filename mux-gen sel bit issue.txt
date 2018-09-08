@@ -1,0 +1,10 @@
+mux_generic issue(s)
+
+
+custom_postgui.hal:136: Pin 'mux-gen.01.sel-bit0' does not exist
+
+It should be mux-gen.01.sel-bit-00
+The issue is the manual does not show the '-'.
+
+Also, if you only type mux-gen.01.sel-bit-0, it won't work, need to 0's:
+mux-gen.01.sel-bit-00

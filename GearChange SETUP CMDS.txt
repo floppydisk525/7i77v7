@@ -1,0 +1,43 @@
+Typing "halcmd show pin" in a terminal window will dump
+all hal pins and their states (and you can of course re-direct this output list to a file)
+
+The command is
+halcmd show pin
+
+(I often mix this up as well)
+halcmd is quite useful for debugging
+man halcmd
+
+if you want specific sets of data you can use grep for example:
+halcmd show | grep motion > motion_related_HAL.txt
+
+*******************************************************************
+sudo dmesg -C  (this clears the log)
+
+(start linuxcnc, wait for sserial error)
+
+dmesg > log.txt
+
+*************************index testing****************************
+Index    http://gnipsel.com/linuxcnc/tuning/encoder.html
+The first thing to check when index does not work is index polarity.
+
+Run your Configuration
+
+Open Show Hal Configuration
+
+Find the index-enable for the axis or spindle and if it is linked to a signal, unlink it like this unlink motion.spindle-index-enable in the Test HAL command: box. Make sure you use the pin name for the axis or spindle you are testing.
+
+Software Encoder - In the Test HAL command: setp <encoder name>index-enable 1
+
+HostMot2 Encoder - In the Test HAL command: sets <signal name>index-enable 1
+
+If the Value of the index-enable goes back to false immediately then it is likely your polarity is wrong.
+
+If the Value of the index-enable stays true open the watch window and add that pin to the watch window. Slowly move the encoder through one turn and by the time you pass one turn the index-enable should be false again. If not check your wiring.
+
+********************************** unlinkp *********************************
+http://linuxcnc.org/docs/html/hal/basic-hal.html
+
+********************************manual links**********************************
+http://linuxcnc.org/docs/html/hal/rtcomps.html#_encoder

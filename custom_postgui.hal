@@ -1,12 +1,31 @@
 # Include your custom_postgui HAL commands here
 # This file will not be overwritten when you run PNCconf again
 
+#per JT-Shop ->  the only thing that has to be in custom_postgui.hal is pins in the gui
+
+#*******************
+#  SPINDLE RPM METER
+#*******************
+
 # display the rpm based on freq * rpm per hz
 loadrt mult2
 addf mult2.0 servo-thread
-setp mult2.0.in1 143.75
+#setp mult2.0.in1 71.875
+
 net cypher_speed mult2.0.in0 <= spindle-vfd.frequency-out
+
+loadrt mux2
+addf mux2.0 servo-thread
+setp mux2.0.in0 8.65964
+setp mux2.0.in1 72.0  #GUESSING - NEED TO SET
+net mux2_select_input pyvcp.HIGHSPEED-chkbtn mux2.0.sel
+net mux2_to_mult2 mux2.0.out mult2.0.in1
+
 net speed_out pyvcp.spindle_rpm <= mult2.0.out
+
+#*******************
+#  SPINDLE LED DISPLAY
+#*******************
 
 # run led
 net gs2-run => pyvcp.on-led
@@ -16,3 +35,111 @@ net gs2-fwd => pyvcp.fwd-led
 
 # rev led
 net gs2-rev => pyvcp.rev-led
+
+#*******************
+#  SPINDLE RPM CMD DISPLAY
+#*******************
+
+net spindle-vel-cmd-rpm-abs pyvcp.motion-spindle-rpm
+
+#*******************
+#  JOYSTICK_JOYPAD SETUP
+#*******************
+
+loadusr -W hal_input -KRAL ANKO
+#WATCH OUT for JOY vs. JOG.  
+#commands for the joystick here
+loadrt or2 count=2
+loadrt mux4 count=1
+
+addf or2.0 servo-thread
+addf or2.1 servo-thread
+addf mux4.0 servo-thread
+
+# set the jog speed for the joypad again use numbers that make sense for your machine
+# this one must be 0 to prevent motion unless a button is pressed
+setp mux4.0.in0 0 
+setp mux4.0.in1 4
+setp mux4.0.in2 20
+setp mux4.0.in3 40
+#setp mux4.0.in1 25
+#setp mux4.0.in2 100
+#setp mux4.0.in3 200
+
+# the following does the magic of setting the jog speeds
+net remote-speed-slow or2.0.in0 input.0.btn-a
+net remote-speed-medium or2.1.in0 input.0.btn-b
+net remote-speed-fast or2.0.in1 or2.1.in1 input.0.btn-c
+
+net joy-speed-1 mux4.0.sel0 <= or2.0.out
+net joy-speed-2 mux4.0.sel1 <= or2.1.out
+net jog-speed <= mux4.0.out
+#net joy-speed-final halui.jog-speed <= mux4.0.out
+#net joy-speed-final jog-speed <= mux4.0.out
+
+#Set up the Axis Add the following to ##### REMOVE FOLLOWING IF WORKS ####  your postgui.hal file 
+net jog-x-analog <= input.0.abs-x-position 
+net jog-y-analog <= input.0.abs-y-position 
+net jog-z-analog <= input.0.abs-z-position 
+
+#Reverse any Axis that go in the wrong direction
+setp input.0.abs-x-scale -63.5
+setp input.0.abs-z-scale -63.5
+
+#*******************
+#  GEARCHANGE 
+#*******************
+
+loadrt gearchange count=1
+addf gearchange.0 servo-thread
+#net gearchange-select gearchange.0.sel hm2_5i25.0.7i77.0.0.input-03
+#net gearchange-select gearchange.0.sel pyvcp.gearchange-chkbtn
+
+setp gearchange.0.min1 60
+setp gearchange.0.max1 500
+setp gearchange.0.min2 500
+setp gearchange.0.max2 4200
+setp gearchange.0.scale2 8.33775   #WORK ON SCALING.
+setp gearchange.0.reverse 1  #reverse direction in 2nd gear.
+
+#**********************NEW SCALING FACTOR*****************
+net spindle-speed-scale motion.spindle-speed-out => gearchange.0.speed-in
+#scaling output goes into the gearbox component.
+net spindle-speed-scale-out scale.0.out => spindle-vfd.speed-command
+#gearchange output goes to spindle speed command...  
+net spindle-speed-gear-output gearchange.0.speed-out => scale.0.in
+
+#*******************
+#  GEARCHANGE DISPLAY
+#*******************
+
+net mux2_select_input gearchange.0.sel
+#net gearchange-select gearchange.0.sel 
+#net gearchange-select pyvcp.HIGHSPEED-chkbtn
+#net gearchange-dir => gearchange.0.dir-in
+#net gearchange-dir <= pyvcp.gch-dir-chkbtn
+
+#*******************
+#  GEARCHANGE DIRECTION
+#*******************
+
+#Add Mux-gen to selected between bits in/out, mux2 is float in/out.
+loadrt mux_generic config="bb2,bb2"
+addf mux-gen.00 servo-thread
+addf mux-gen.01 servo-thread
+
+loadrt not count=2
+addf not.0 servo-thread
+addf not.1 servo-thread
+
+net grch-dir-output gearchange.0.dir-out => mux-gen.00.sel-bit-00 mux-gen.01.sel-bit-00
+
+#SPINDLE-FORWARD PINS
+net gs2fwd motion.spindle-forward => mux-gen.00.in-bit-01 not.0.in
+net notgs2fwd not.0.out mux-gen.00.in-bit-00
+net spindle-vfd-forward mux-gen.00.out-bit spindle-vfd.spindle-fwd
+
+#SPINDLE-REVERSE PINS
+net gs2rev motion.spindle-reverse => mux-gen.01.in-bit-01 not.1.in
+net notgs2rev not.1.out mux-gen.01.in-bit-00
+net spindle-vfd-reverse mux-gen.01.out-bit spindle-vfd.spindle-rev
