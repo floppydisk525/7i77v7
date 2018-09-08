@@ -1,0 +1,18 @@
+# Include your custom_postgui HAL commands here
+# This file will not be overwritten when you run PNCconf again
+
+# display the rpm based on freq * rpm per hz
+loadrt mult2
+addf mult2.0 servo-thread
+setp mult2.0.in1 5.75
+net cypher_speed mult2.0.in0 <= spindle-vfd.frequency-out
+net speed_out pyvcp.spindle_rpm <= mult2.0.out
+
+# run led
+net gs2-run => pyvcp.on-led
+
+# fwd led
+net gs2-fwd => pyvcp.fwd-led
+
+# rev led
+net gs2-rev => pyvcp.rev-led

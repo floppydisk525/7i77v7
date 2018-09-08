@@ -1,0 +1,37 @@
+# Include your custom HAL commands here
+# This file will not be overwritten when you run PNCconf again
+
+#GS2 VFD COMPONENT
+# load the user space component for the Automation Direct GS2 VFD's
+loadusr -Wn spindle-vfd gs2_vfd -r 9600 -p none -s 2 -n spindle-vfd -R
+
+# connect the spindle direction pin to the GS2
+net gs2-fwd spindle-vfd.spindle-fwd <= motion.spindle-forward
+net gs2-rev spindle-vfd.spindle-rev <= motion.spindle-reverse
+
+# connect the spindle on pin to the GS2
+net gs2-run spindle-vfd.spindle-on <= motion.spindle-on
+
+# connect the GS2 at speed to the motion at speed
+net gs2-at-speed motion.spindle-at-speed <= spindle-vfd.at-speed
+
+# connect the spindle RPM to the GS2
+#net gs2-RPM spindle-vfd.speed-command <= motion.spindle-speed-out
+
+loadrt scale count=1
+addf scale.0 servo-thread
+setp scale.0.gain 0.2
+net spindle-speed-scale motion.spindle-speed-out => scale.0.in
+net spindle-speed-DAC scale.0.out => spindle-vfd.speed-command
+
+# Lube Pump
+#when motion.current-vel is greater than 0.0001, turn on lube pump with output-02.
+# From John Thornton's BP.Hal file.  
+loadrt comp
+addf comp.0 servo-thread
+setp comp.0.in0 0.0001
+net motion-test comp.0.in1 <= motion.current-vel
+net in-motion hm2_5i25.0.7i77.0.0.output-01 <= comp.0.out
+#Do not think we need next line
+#net in-motion hm2_5i25.0.7i77.0.0.output-04
+
